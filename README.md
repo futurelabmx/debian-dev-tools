@@ -1,2 +1,2 @@
 
-A collection of tools to develop/compile Linux Mint projects.
+A collection of tools to develop/compile Linux Mint - to - Debian projects.
