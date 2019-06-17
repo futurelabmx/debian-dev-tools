@@ -1,2 +1,2 @@
-# debian-dev-tools
-Dev Tools ported from Linux Mint to Debian.
+
+A collection of tools to develop/compile Linux Mint projects.

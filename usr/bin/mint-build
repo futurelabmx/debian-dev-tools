@@ -1,0 +1,99 @@
+#!/usr/bin/python3
+
+import sys
+import os
+import argparse
+
+def call(command):
+    return_code = os.system(command)
+    if return_code != 0:
+        print("ERROR: '%s' exited with return code %d" % (command, return_code))
+        sys.exit(1)
+
+def install():
+    print("")
+    print("   #######################################################################")
+    print("   ### Installing")
+    print("   #######################################################################")
+    print("")
+    call("sudo apt install --yes --allow-downgrades ../*.deb || sudo dpkg -i ../*.deb")
+
+def build(suffix):
+    if os.path.exists("debian/changelog.orig"):
+        call("mv debian/changelog.orig debian/changelog")
+
+    if (suffix is not None):
+        print("")
+        print("   #######################################################################")
+        print("   ### Adding suffix '%s'" % suffix)
+        print("   #######################################################################")
+        print("")
+        call("cp debian/changelog debian/changelog.orig")
+        call("sed -i '0,/)/s/)/%s)/' debian/changelog" % suffix)
+        print("")
+
+    print("")
+    print("   #######################################################################")
+    print("   ### Downloading build dependencies")
+    print("   #######################################################################")
+    print("")
+    call("sudo DEBIAN_FRONTEND=noninteractive mk-build-deps -i -r -t 'apt-get -y' debian/control")
+    print("")
+
+    print("")
+    print("   #######################################################################")
+    print("   ### Building")
+    print("   #######################################################################")
+    print("")
+    call("dpkg-buildpackage -us -uc")
+
+    if os.path.exists("debian/changelog.orig"):
+        call("mv debian/changelog.orig debian/changelog")
+
+parser = argparse.ArgumentParser(description='Build project')
+parser.add_argument("-i", "--install", action="store_true", help="Install built packages")
+parser.add_argument("-s", "--suffix", help="Version suffix", required=False)
+parser.add_argument("-g", "--git-repository", help="Git clone URL, or project name (for Mint projects on Github). Suffix with #tagname or #branchname to specify a branch or a tag to build from.", required=False)
+args = parser.parse_args()
+
+cwd = os.getcwd()
+
+if args.git_repository is not None:
+    project_url = args.git_repository
+    tag_branch = None
+    if "#" in project_url:
+        (project_url, tag_branch) = project_url.split("#")
+    if "://" in project_url or "@" in project_url:
+        project_name = project_url.split("/")[-1].replace(".git", "")
+    else:
+        # If only a name is given, assume the URL is on Linux Mint's github
+        project_name = project_url
+        project_url = "https://github.com/linuxmint/%s.git" % project_name
+    call("mkdir -p %s" % project_name)
+    os.chdir(project_name)
+    print("")
+    print("   #######################################################################")
+    print("   ### Cloning %s (branch/tag: %s)" % (project_name, tag_branch))
+    print("   #######################################################################")
+    print("")
+    if os.path.exists(project_name):
+        call("rm -rf '%s'" % project_name)
+    call("git clone %s" % project_url)
+    os.chdir(project_name)
+    if tag_branch is not None:
+        call("git checkout %s" % tag_branch)
+
+if os.path.exists('debian'):
+    build(args.suffix)
+    if args.install:
+        install()
+else:
+    for subdirectory in os.listdir("."):
+        if os.path.isdir(subdirectory) and os.path.exists(os.path.join(subdirectory, "debian")):
+            os.chdir(subdirectory)
+            build(args.suffix)
+            if args.install:
+                install()
+            os.chdir("..")
+
+os.chdir(cwd)
