@@ -66,9 +66,9 @@ if args.git_repository is not None:
     if "://" in project_url or "@" in project_url:
         project_name = project_url.split("/")[-1].replace(".git", "")
     else:
-        # If only a name is given, assume the URL is on Linux Mint's github
+        # If only a name is given, assume the URL is on Debian's gitlab
         project_name = project_url
-        project_url = "https://github.com/linuxmint/%s.git" % project_name
+        project_url = "https://salsa.debian.org/public/%s.git" % project_name
     call("mkdir -p %s" % project_name)
     os.chdir(project_name)
     print("")
