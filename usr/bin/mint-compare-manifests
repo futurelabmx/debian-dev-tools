@@ -21,10 +21,10 @@ class Release:
 
 if len(sys.argv) != 3:
     print("")
-    print("Usage: mint-compare-manifests release1 release2")
+    print("Usage: debian-compare-manifests release1 release2")
     print("")
     print("Available releases: ")
-    for path in os.listdir("/usr/share/mint-dev-tools/manifests"):
+    for path in os.listdir("/usr/share/debian-dev-tools/manifests"):
         print("   %s" % path)
     print("")
     sys.exit(1)
@@ -36,14 +36,14 @@ for release in [release1, release2]:
     release_prefix = release.name.split("-")[0]
     if "ubuntu" in release_prefix:
         release_prefix = "ubuntu"
-    with open("/usr/share/mint-dev-tools/manifests/%s-specific.list" % release_prefix, 'r') as prefix_file:
+    with open("/usr/share/debian-dev-tools/manifests/%s-specific.list" % release_prefix, 'r') as prefix_file:
         for line in prefix_file:
             line = line.strip()
             if line.startswith('#'):
                 continue
             release.specific_names.append(line)
 
-    with open("/usr/share/mint-dev-tools/manifests/%s/filesystem.manifest" % release.name, 'r') as manifest_file:
+    with open("/usr/share/debian-dev-tools/manifests/%s/filesystem.manifest" % release.name, 'r') as manifest_file:
         for line in manifest_file:
             line = line.strip()
             if line.startswith('#'):
